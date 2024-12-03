@@ -11,9 +11,9 @@ module.exports.registerUser = async (req, res, next) => {
 
   const { fullname, password, email } = req.body;
 
-  const existedUser = await userModel.findOne({email})
-  if(existedUser){
-    return res.status(400).json({message: "User already exists"})
+  const existedUser = await userModel.findOne({ email });
+  if (existedUser) {
+    return res.status(400).json({ message: "User already exists" });
   }
 
   const hashedPassword = await userModel.hashPassword(password);
@@ -27,10 +27,11 @@ module.exports.registerUser = async (req, res, next) => {
 
   const token = user.generateAuthToken();
 
-  res.status(200).json({ token, user });
+  res.status(201).json({ token, user });
 };
 
 module.exports.loginUser = async (req, res, next) => {
+  
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -62,13 +63,19 @@ module.exports.getUserProfile = async (req, res) => {
   res.status(200).json(req.user);
 };
 
-module.exports.logoutUser = async (req, res) => {
-  res.clearCookie("token");
-  const token = req.cookies.token || req.headers.authorization.split(" ")[1];
+module.exports.logoutUser = async (req, res, next) => {
+  const token = req.cookies.token || req.headers.authorization.split(' ')[ 1 ];
 
-  await blacklistTokenModel.create({
-    token,
-  });
+  if (!token) {
+    return res.status(400).json({ message: "Token not found." });
+  }
 
-  res.status(200).json({ message: "Logged out successfully" });
+  try {
+    await blacklistTokenModel.create({ token });
+    res.clearCookie("token");
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: `Something went wrong. ${err}` });
+  }
 };

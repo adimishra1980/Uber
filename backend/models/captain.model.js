@@ -46,6 +46,10 @@ const captainSchema = new mongoose.Schema({
       type: String,
       required: true,
       minlength: [3, "Plate must be least 3 characters long"],
+      // match: [
+      //   /^[A-Z0-9-]{3,10}$/,
+      //   "Enter a valid vehicle number plate.",
+      // ],
     },
     capacity: {
       type: String,

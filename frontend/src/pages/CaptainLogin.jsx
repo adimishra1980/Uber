@@ -1,18 +1,42 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios"
+import { CaptainDataContext } from "../contexts/CaptainContext.jsx";
+
+
 
 function CaptainLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [captainData, setCaptainData] = useState({});
+  const [error, setError] = useState("")
 
-  const handleSubmit = (e) => {
+
+  const navigate = useNavigate()
+
+  const {captain, setCaptain} = useContext(CaptainDataContext)
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
-    setCaptainData({
+    const captainData = {
       email: email,
       password: password,
-    });
+    };
+
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/captains/login`, captainData)
+  
+      if(response.status == 200){
+        const data = response.data
+        setCaptain(data.captain)
+        localStorage.setItem("token", data.token)
+        navigate("/captain-home")
+      }
+    } catch (err) {
+      let error = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || "Login failed. try again.";
+      setError(error)
+      navigate("/captain-login")
+    }
 
     setEmail("");
     setPassword("");
@@ -27,7 +51,9 @@ function CaptainLogin() {
           alt=""
         />
         <form onSubmit={handleSubmit}>
-          <h3 className="text-lg font-medium  mb-2">What's our captain's email?</h3>
+          <h3 className="text-lg font-medium  mb-2">
+            What's our captain's email?
+          </h3>
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -45,6 +71,8 @@ function CaptainLogin() {
             type="password"
             placeholder="password"
           />
+          {error ? <p className=" text-red-600 mb-3 font-semibold text-center">{error}</p> : <></>}
+
           <button className="w-full bg-[#111] text-white mb-3 font-semibold rounded-lg px-4 py-2 text-lg placeholder:text-base">
             Login
           </button>

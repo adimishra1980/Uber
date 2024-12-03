@@ -1,19 +1,41 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { UserDataContext } from "../contexts/UserContext";
+import axios from "axios";
 
 function UserLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userData, setUserData] = useState({});
+  const [error, setError] = useState("")
 
-  const handleSubmit = (e) => {
+
+  const navigate = useNavigate()
+
+  const {user, setUser} = useContext(UserDataContext)
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
-    setUserData({
+    const userData = {
       email: email,
-      password: password,
-    });
+      password: password
+    }
 
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/login`, userData)
+  
+      if(response.status == 200){
+        const data = response.data
+        setUser(data.user)
+        localStorage.setItem("token", data.token)
+        navigate("/home")
+      }
+    } catch (err) {
+      let error = err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || "Login failed. try again.";
+      setError(error)
+      navigate("/login")
+    }
+    
     setEmail("");
     setPassword("");
   };
@@ -40,11 +62,14 @@ function UserLogin() {
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[#eeeeee] mb-7 rounded border px-4 py-2 text-lg placeholder:text-base"
+            className="w-full bg-[#eeeeee] mb-3 rounded border px-4 py-2 text-lg placeholder:text-base"
             required
             type="password"
             placeholder="password"
           />
+          
+          {error ? <p className=" text-red-600 mb-3 font-semibold text-center">{error}</p> : <></>}
+
           <button className="w-full bg-[#111] text-white mb-3 font-semibold rounded-lg px-4 py-2 text-lg placeholder:text-base">
             Login
           </button>
