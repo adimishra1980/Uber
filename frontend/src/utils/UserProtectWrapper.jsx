@@ -36,7 +36,7 @@ function UserProtectWrapper({ children }) {
 
 
   if(isLoading){
-    return <div>Loading...</div>
+    return <div className="text-2xl flex justify-center items-center h-screen w-screen">Loading...</div>
   }
 
   return <>{children}</>;
